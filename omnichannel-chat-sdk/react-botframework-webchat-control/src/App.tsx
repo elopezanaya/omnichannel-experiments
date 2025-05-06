@@ -1,116 +1,125 @@
-import { useCallback, useEffect, useState } from 'react'
+import './App.css';
+
+import { useCallback, useState } from 'react'
+
+import { FluentThemeProvider } from 'botframework-webchat-fluent-theme';
 import { OmnichannelChatSDK } from '@microsoft/omnichannel-chat-sdk';
 import ReactWebChat from 'botframework-webchat';
-import AppConfig from './configs/AppConfig';
-import AppDetails from './components/AppDetails/AppDetails';
-import fetchDebugConfig from './utils/fetchDebugConfig';
-import fetchOmnichannelConfig from './utils/fetchOmnichannelConfig';
 import fetchChatSDKConfig from './utils/fetchChatSDKConfig';
-import fetchAuthToken from './utils/fetchAuthToken';
-import ChatButton from './components/ChatButton/ChatButton';
-import ChatCommands from './components/ChatCommands/ChatCommands';
-import ChatHeader from './components/ChatHeader/ChatHeader';
-import createActivityMiddleware from './middlewares/native/createActivityMiddleware';
-import './App.css';
+import loadOmnichannelConfig from './utils/LoadOmnichannelConfig';
 
 function App() {
   const [chatSDK, setChatSDK] = useState<OmnichannelChatSDK>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [chatAdapter, setChatAdapter] = useState<any>(undefined);
-  const [hasChatStarted, setHasChatStarted] = useState(false);
 
-  useEffect(() => {
+  const [botId, setBotId] = useState('');
+
+  const [status, setStatus] = useState('Not Initialized'); // New state for status
+
+  const handleBotIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setBotId(event.target.value);
+  };
+
+  const loadChatSDK = useCallback(async () => {
+        
+    const omnichannelConfig = loadOmnichannelConfig(botId);
+
+    const chatSDKConfig = fetchChatSDKConfig();
+
     const init = async () => {
-      const omnichannelConfig = fetchOmnichannelConfig();
-      const debugConfig = fetchDebugConfig();
-      const authToken = await fetchAuthToken({option: 'api'});
-      const chatSDKConfig = fetchChatSDKConfig({ authToken });
       const chatSDK = new OmnichannelChatSDK(omnichannelConfig, chatSDKConfig);
       await chatSDK.initialize();
-
-      if (debugConfig.debug) {
-        chatSDK.setDebug(true);
-      }
-
       setChatSDK(chatSDK);
-
-      const chatConfig = await chatSDK.getLiveChatConfig();
-      if (AppConfig.ChatSDK.liveChatConfig.log) {
-        console.log(chatConfig);
-      }
-
-      if (AppConfig.ChatSDK.liveChatContext.reset) {
-        localStorage.removeItem('liveChatContext');
-      }
+      await chatSDK.getLiveChatConfig();
+      console.log("Chat SDK initialized!");
+      setStatus("Initialized")
     }
 
     init();
-  }, []);
+
+  }, [botId]);
 
   const startChat = useCallback(async () => {
-    if (hasChatStarted) {
-      return;
-    }
-
-    const optionalParams: any = {};
-    if (AppConfig.ChatSDK.liveChatContext.retrieveFromCache) {
-      const cachedLiveChatContext = localStorage.getItem('liveChatContext');
-      if (cachedLiveChatContext && Object.keys(JSON.parse(cachedLiveChatContext)).length > 0) {
-        AppConfig.ChatSDK.liveChatContext && console.log("[liveChatContext]");
-        optionalParams.liveChatContext = JSON.parse(cachedLiveChatContext);
-      }
-    }
-
-    await chatSDK?.startChat(optionalParams);
-
-    if (AppConfig.ChatSDK.liveChatContext.cache) {
-      const liveChatContext = await chatSDK?.getCurrentLiveChatContext();
-      localStorage.setItem('liveChatContext', JSON.stringify(liveChatContext));
-    }
-
-    setHasChatStarted(true);
+    await chatSDK?.startChat();
     console.log("Chat started!");
+    setStatus('Chat started'); // Update status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await chatSDK?.onNewMessage((message: any) => {
-      AppConfig.ChatSDK.onNewMessage.log && console.log(`New message!`);
-      AppConfig.ChatSDK.onNewMessage.log && console.log(message?.content);
+      console.log(`New message!`)
+      console.log(message?.content);
     });
 
     const chatAdapter = await chatSDK?.createChatAdapter();
     setChatAdapter(chatAdapter);
-  }, [chatSDK, hasChatStarted]);
+  }, [chatSDK]);
 
   const endChat = useCallback(async () => {
-    if (!hasChatStarted) {
-      return;
-    }
-
     await chatSDK?.endChat();
+    setStatus('Chat ended'); // Update status
+  }, [chatSDK]);
 
-    if (AppConfig.ChatSDK.liveChatContext.cache) {
-      localStorage.removeItem('liveChatContext');
-    }
+  const resetChatSDK = useCallback(async () => {
+    console.log("Resetting chat SDK...")
 
-    setHasChatStarted(false);
-  }, [chatSDK, hasChatStarted]);
+    setChatSDK(undefined);
+    setChatAdapter(undefined);
+    setStatus('Not Initialized'); // Reset status
+
+    setBotId('');
+
+    console.log("Chat SDK reset!");
+  },[]);
 
   return (
-    <>
-      <h1>ChatSDK Sample</h1>
-      <AppDetails />
-      <ChatCommands startChat={startChat} endChat={endChat} />
-      { hasChatStarted && <div style={{position: 'absolute', bottom: 20, right: 20, height: 560, width: 350, border: '1px solid rgb(209, 209, 209)', display: 'flex', flexDirection: 'column'}}>
-          <ChatHeader onClose={endChat}/>
-          {chatAdapter && <ReactWebChat
-              directLine={chatAdapter}
-              activityMiddleware={createActivityMiddleware()}
-            />
-          }
+    <div className="app-container">
+      <div className="card">
+        <h1>Omnichannel Chat Configuration</h1>
+        {status && <p className="status-label">Status : {status}</p>} {/* Status label */}
+
+        <div className="form-group">
+          <label htmlFor="botId">Bot ID (GUID format):</label>
+          <input
+            type="text"
+            id="botId"
+            placeholder="Enter the CPS Bot ID"
+            value={botId}
+            onChange={handleBotIdChange}
+          />
         </div>
-      }
-      { !hasChatStarted && AppConfig.widget.chatButton.disabled === false &&
-        <ChatButton handleClick={startChat}/>
-      }
-    </>
-  )
+        <div className="button-group">
+          <button id="initButton" onClick={loadChatSDK}>
+            Initialize
+          </button>
+          <button id="resetButton" onClick={resetChatSDK}>
+            Reset
+          </button>
+
+        </div>
+        
+      </div>
+  
+      <div className="card">
+        <h2>Chat Controls</h2>
+        <div id="controls" className="button-group">
+          <button id="startChatButton" onClick={startChat}>
+            Start Chat
+          </button>
+          <button id="endchatButton" onClick={endChat}>
+            End Chat
+          </button>
+        </div>
+      </div>
+  
+      <div className="chat-container">
+        {chatAdapter && (
+          <FluentThemeProvider>
+            <ReactWebChat directLine={chatAdapter} />
+          </FluentThemeProvider>
+        )}
+      </div>
+    </div>
+  );
 }
 
-export default App;
+export default App
