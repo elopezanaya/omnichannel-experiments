@@ -40,3 +40,111 @@
 .read-the-docs {
   color: #888;
 }
+
+
+/* General button styles */
+button {
+  background-color: #0078d4; /* Microsoft Fluent blue */
+  color: white;
+  border: none;
+  border-radius: 6px; /* Slightly rounded corners */
+  padding: 12px 18px; /* Comfortable padding */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* Hover effect for buttons */
+button:hover {
+  background-color: #005a9e; /* Darker blue for hover */
+  transform: translateY(-2px); /* Slight lift effect */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+/* Disabled button styles */
+button:disabled {
+  background-color: #d3d3d3; /* Light gray for disabled state */
+  color: #a0a0a0; /* Gray text */
+  cursor: not-allowed;
+  box-shadow: none; /* Remove shadow for disabled buttons */
+}
+
+/* Specific styles for Reset button */
+#resetButton {
+  background-color: #e81123; /* Red for reset */
+}
+
+#resetButton:hover {
+  background-color: #c50f1f; /* Darker red for hover */
+}
+
+/* Specific styles for Start Chat button */
+#startChatButton {
+  background-color: #107c10; /* Green for start */
+}
+
+#startChatButton:hover {
+  background-color: #0b6a0b; /* Darker green for hover */
+}
+
+/* Specific styles for End Chat button */
+#endchatButton {
+  background-color: #f7630c; /* Orange for end */
+}
+
+#endchatButton:hover {
+  background-color: #d74600; /* Darker orange for hover */
+}
+
+/* Button group layout */
+.button-group {
+  display: flex;
+  justify-content: center; /* Center the buttons horizontally */
+  gap: 15px; /* Add spacing between buttons */
+  margin-top: 20px; /* Add spacing above the button group */
+}
+
+/* Status label styling */
+.status-label {
+  margin-top: 15px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff; /* White text */
+  background-color: #0078d4; /* Microsoft Fluent blue */
+  border-radius: 20px; /* Rounded badge-like appearance */
+  text-align: center;
+  display: inline-block; /* Keeps the label compact */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  animation: fadeIn 0.3s ease-in-out; /* Smooth fade-in effect */
+}
+
+/* Fade-in animation for the status label */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Floating chat container */
+.chat-container {
+  position: fixed; /* Makes the div float */
+  bottom: 20px; /* Distance from the bottom of the screen */
+  right: 20px; /* Distance from the right of the screen */
+  width: 350px; /* Set a fixed width */
+  height: 500px; /* Set a fixed height */
+  background-color: white; /* Background color for the chat */
+  border: 1px solid #ccc; /* Light border for separation */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  overflow-y: auto; /* Enables vertical scrolling */
+  overflow-x: hidden; /* Prevents horizontal scrolling */
+  z-index: 1000; /* Ensures it stays on top of other elements */
+}
